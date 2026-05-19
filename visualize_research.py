@@ -127,6 +127,30 @@ def cleanup_old_plots(output_dir):
             except:
                 pass
 
+def plot_qualitative_impact(output_dir):
+    """Scatter plot of Semantic Shift vs Confidence for research insight."""
+    res_path = os.path.join(output_dir, "translation_results.csv")
+    if not os.path.exists(res_path): return
+    
+    df = pd.read_csv(res_path)
+    
+    plt.figure(figsize=(10, 7))
+    # Map categories to colors
+    palette = {"High (Intervene)": "green", "Medium (Verify)": "orange", "Low (Baseline Stable)": "gray"}
+    
+    sns.scatterplot(data=df, x="Gating Confidence", y="Semantic Shift", 
+                    hue="Confidence Category", size="Semantic Shift",
+                    palette=palette, sizes=(50, 200), alpha=0.7)
+    
+    plt.title("Qualitative Intervention Analysis", size=18, fontweight='bold')
+    plt.xlabel("Model Confidence (Gating Score)")
+    plt.ylabel("Output Transformation (Semantic Shift)")
+    plt.grid(True, linestyle='--', alpha=0.6)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    plt.savefig(os.path.join(output_dir, "qualitative_impact_analysis.png"), dpi=300, bbox_inches='tight')
+    plt.close()
+
 def run_visualizations(csv_path, output_dir):
     if not os.path.exists(csv_path):
         print(f"Error: {csv_path} not found.")
@@ -143,6 +167,7 @@ def run_visualizations(csv_path, output_dir):
     plot_enhanced_radar(df, output_dir)
     plot_semantic_gap(df, output_dir)
     plot_gate_precision(output_dir)
+    plot_qualitative_impact(output_dir)
     print(f"Success! Advanced research graphs saved to {output_dir}")
 
 if __name__ == "__main__":

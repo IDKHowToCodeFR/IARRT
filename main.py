@@ -139,13 +139,32 @@ def main(sample_size: int = 4000, eval_size: int = 80, top_k: int = 3, seed: int
         results["retrievals"],
     )
 
+    # Calculate per-sentence research metrics
+    semantic_shifts = []
+    confidence_levels = []
+    for base, final, gate in zip(results["baseline"], results["final"], results["gates"]):
+        # Simple research proxy for 'Semantic Shift': normalized edit distance
+        import difflib
+        shift = 1.0 - difflib.SequenceMatcher(None, base, final).ratio()
+        semantic_shifts.append(shift)
+        
+        # Categorize confidence
+        if gate > 0.8: level = "High (Intervene)"
+        elif gate > 0.4: level = "Medium (Verify)"
+        else: level = "Low (Baseline Stable)"
+        confidence_levels.append(level)
+
     output_df = eval_df.copy()
-    output_df["detected_idioms"] = [
+    output_df["Detected Idioms"] = [
         "; ".join(idiom for idiom, _, _ in spans) for spans in results["spans"]
     ]
-    output_df["baseline_translation"] = results["baseline"]
-    output_df["idiom_aware_translation"] = results["final"]
-    output_df["gate_score"] = results["gates"]
+    output_df["Baseline Translation"] = results["baseline"]
+    output_df["IARRT Translation (Ours)"] = results["final"]
+    output_df["Gating Confidence"] = results["gates"]
+    output_df["Confidence Category"] = confidence_levels
+    output_df["Semantic Shift"] = semantic_shifts
+    
+    # Save a more professional CSV
     output_df.to_csv(os.path.join(OUTPUT_DIR, "translation_results.csv"), index=False)
 
     summary = {
