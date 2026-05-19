@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+
+# Models and Data
+models/
+outputs/
+visualizations/
+data/subset.csv
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
