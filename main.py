@@ -40,32 +40,33 @@ OUTPUT_DIR = os.path.join(PROJECT_DIR, "outputs")
 
 def add_idiom_demo_rows(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Add a few idiom-rich examples so the routing and plots are visible.
-
-    The OPUS subset may not contain our tiny manual idiom list, so these rows
-    make the prototype behavior easy to inspect.
+    Add idiom-rich examples for robust evaluation.
     """
-    demo_rows = pd.DataFrame(
-        [
-            {
-                "de": "Ich musste ins kalte Wasser springen.",
-                "en": "I had to take the plunge.",
-            },
-            {
-                "de": "Sie liess die Katze aus dem Sack.",
-                "en": "She let the cat out of the bag.",
-            },
-            {
-                "de": "Er trifft den Nagel auf den Kopf.",
-                "en": "He hits the nail on the head.",
-            },
-            {
-                "de": "Bitte rede nicht um den heissen Brei.",
-                "en": "Please do not beat around the bush.",
-            },
-        ]
-    )
-    return pd.concat([demo_rows, df], ignore_index=True)
+    demo_data = [
+        {"de": "Ich musste ins kalte Wasser springen.", "en": "I had to take the plunge."},
+        {"de": "Sie liess die Katze aus dem Sack.", "en": "She let the cat out of the bag."},
+        {"de": "Er hat den Nagel auf den Kopf getroffen.", "en": "He hit the nail on the head."},
+        {"de": "Hör auf, um den heissen Brei zu reden!", "en": "Stop beating around the bush!"},
+        {"de": "Hast du Tomaten auf den Augen?", "en": "Are you blind to the obvious?"},
+        {"de": "Ich verstehe nur Bahnhof.", "en": "I don't understand a thing."},
+        {"de": "Ich druecke dir die Daumen.", "en": "I'll keep my fingers crossed for you."},
+        {"de": "Wir müssen das Kind beim Namen nennen.", "en": "We must call a spade a spade."},
+        {"de": "Zwei Fliegen mit einer Klappe schlagen.", "en": "To kill two birds with one stone."},
+        {"de": "Er hat mir einen Baeren aufgebunden.", "en": "He pulled my leg."},
+        {"de": "Wir müssen das Ruder herumreissen.", "en": "We must turn things around."},
+        {"de": "Er wollte die Finte ins korn werfen.", "en": "He wanted to throw in the towel."},
+        {"de": "Lass mal die Kirche im Dorf.", "en": "Don't get carried away."},
+        {"de": "Du bist auf dem Holzweg.", "en": "You are on the wrong track."},
+        {"de": "Ich habe den faden verloren.", "en": "I lost my thread."},
+        {"de": "Er lebt auf großem Fuß.", "en": "He lives in high style."},
+        {"de": "Sie hat ihm den kopf verdreht.", "en": "She turned his head."},
+        {"de": "Er sieht seine felle davonschwimmen.", "en": "He sees his hopes fade."},
+        {"de": "Hast du ein Brett vor dem kopf?", "en": "Are you slow on the uptake?"},
+        {"de": "Mach aus einer mücke einen elefanten.", "en": "Don't make a mountain out of a molehill."},
+    ]
+    demo_df = pd.DataFrame(demo_data)
+    return pd.concat([demo_df, df], ignore_index=True)
+
 
 
 def process_sentences(
