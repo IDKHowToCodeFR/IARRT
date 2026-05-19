@@ -78,18 +78,17 @@ def is_figurative(sentence: str, idiom_span: str) -> bool:
     if not pipe:
         return True
     
-    # Research-grade prompt for idiom disambiguation
-    hypothesis_template = "In diesem Satz wird die Phrase '{}' {} verwendet."
-    labels = ["bildlich", "wörtlich"] # Figurative vs Literal
+    # Standard research-grade zero-shot prompt
+    labels = ["figurative", "literal"]
     
     result = pipe(
         sentence,
         candidate_labels=labels,
-        hypothesis_template=hypothesis_template.format(idiom_span, "{}")
+        hypothesis_template=f"The expression '{idiom_span}' is used in a {{}} way here."
     )
     
-    # Return True if "bildlich" (figurative) is more likely
-    return result["labels"][0] == "bildlich"
+    # Return True if "figurative" has higher score
+    return result["labels"][0] == "figurative"
 
 
 def detect_idioms(sentence: str) -> List[Tuple[str, int, int]]:
@@ -114,15 +113,16 @@ def detect_idioms(sentence: str) -> List[Tuple[str, int, int]]:
             for match in pattern.finditer(normalized):
                 detected_spans.append((idiom, match.start(), match.end()))
 
-    # Research Upgrade: Contextual Disambiguation
-    final_detected = []
-    for idiom, start, end in detected_spans:
-        if is_figurative(sentence, idiom):
-            final_detected.append((idiom, start, end))
-        else:
-            print(f"DEBUG: Disambiguator filtered literal usage: '{idiom}' in '{sentence}'")
-            
-    return final_detected
+    # Research Upgrade: Contextual Disambiguation (Disabled for now to ensure demo movement)
+    # final_detected = []
+    # for idiom, start, end in detected_spans:
+    #     if is_figurative(sentence, idiom):
+    #         final_detected.append((idiom, start, end))
+    #     else:
+    #         print(f"DEBUG: Disambiguator filtered literal usage: '{idiom}' in '{sentence}'")
+    # return final_detected
+
+    return detected_spans
 
 
 

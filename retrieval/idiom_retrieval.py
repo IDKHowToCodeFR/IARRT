@@ -40,7 +40,13 @@ class IdiomRetriever:
 
     def retrieve(self, query: str, k: int = 3) -> List[Dict[str, float]]:
         """Return top-k idioms and cosine-like similarity scores."""
+        if query is None:
+            return []
         query_text = normalize_text(query)
+        if not query_text:
+            return []
+            
+        print(f"DEBUG: Retrieving for '{query}' -> normalized: '{query_text}'")
         query_embedding = self.model.encode([query_text], normalize_embeddings=True)
         query_embedding = np.asarray(query_embedding, dtype="float32")
 

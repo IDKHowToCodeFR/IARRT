@@ -67,17 +67,26 @@ def main(eval_size: int = 20, seed: int = 42):
         all_contexts.append(context)
 
     results = []
+    
+    # Debug: Print first few contexts
+    print("\nDEBUG: Preprocessing Samples:")
+    for i in range(min(3, len(german_sentences))):
+        print(f"  DE: {german_sentences[i]}")
+        print(f"  CTX: '{all_contexts[i]}'")
+        print(f"  SPANS: {all_spans[i]}")
 
     # Pipeline A: Base Zero-Shot (Force No LoRA)
     print("\nRunning Baseline 1: Zero-Shot mBART...")
     translator_base = MBartTranslator(use_lora=False)
-    base_hyps = translator_base.translate_batch(german_sentences, contexts=[""] * eval_size)
+    base_hyps = translator_base.translate_batch(german_sentences, contexts=[""] * len(german_sentences))
     results.append(run_eval("Base mBART", base_hyps, references, all_spans, all_retrievals))
+    print(f"  Sample Hyp: {base_hyps[0]}")
 
     # Pipeline B: RAG Prompting (Base model + Context)
     print("\nRunning Baseline 2: RAG Prompting (Base + Context)...")
     rag_hyps = translator_base.translate_batch(german_sentences, contexts=all_contexts)
     results.append(run_eval("mBART + RAG (Prompt)", rag_hyps, references, all_spans, all_retrievals))
+    print(f"  Sample Hyp: {rag_hyps[0]}")
 
     # Pipeline C: IARRT (LoRA + RAG)
     print("\nRunning Pipeline 3: IARRT (LoRA + RAG)...")
