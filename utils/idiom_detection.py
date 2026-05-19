@@ -51,6 +51,9 @@ def get_detector_pipeline():
     global _DETECTOR_PIPELINE
     if _DETECTOR_PIPELINE is None:
         if os.path.exists(MODEL_PATH):
+            import logging
+            from transformers import logging as hf_logging
+            hf_logging.set_verbosity_error()
             _DETECTOR_PIPELINE = pipeline(
                 "token-classification",
                 model=MODEL_PATH,
@@ -63,6 +66,9 @@ def get_detector_pipeline():
 def get_disambiguator_pipeline():
     global _DISAMBIGUATOR_PIPELINE
     if _DISAMBIGUATOR_PIPELINE is None:
+        import logging
+        from transformers import logging as hf_logging
+        hf_logging.set_verbosity_error()
         # Use a fast multilingual zero-shot classifier for disambiguation
         _DISAMBIGUATOR_PIPELINE = pipeline(
             "zero-shot-classification",

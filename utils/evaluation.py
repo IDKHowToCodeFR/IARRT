@@ -41,6 +41,9 @@ def compute_meteor(references: List[str], hypotheses: List[str]) -> float:
 
 def compute_bertscore(references: List[str], hypotheses: List[str]) -> float:
     """Compute BERTScore (F1)."""
+    import logging
+    from transformers import logging as hf_logging
+    hf_logging.set_verbosity_error()
     P, R, F1 = bert_score_fn(hypotheses, references, lang="en", verbose=False)
     return float(F1.mean()) * 100
 
