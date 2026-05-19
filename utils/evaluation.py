@@ -27,16 +27,16 @@ def compute_chrf(references: List[str], hypotheses: List[str]) -> float:
     return float(chrf.score)
 
 
+from nltk.translate.meteor_score import meteor_score
+
 def compute_meteor(references: List[str], hypotheses: List[str]) -> float:
-    """Compute METEOR score."""
-    if _METEOR:
-        results = _METEOR.compute(predictions=hypotheses, references=references)
-        val = results.get("meteor", 0.0)
-        # Handle numpy float or other scalar wrappers
-        if hasattr(val, "item"): 
-            val = val.item()
-        return float(val) * 100
-    return 0.0
+    """Compute METEOR score using NLTK."""
+    scores = []
+    for ref, hyp in zip(references, hypotheses):
+        # NLTK expects tokens or a list of reference tokens
+        score = meteor_score([ref.split()], hyp.split())
+        scores.append(score)
+    return (sum(scores) / len(scores)) * 100 if scores else 0.0
 
 
 def compute_bertscore(references: List[str], hypotheses: List[str]) -> float:

@@ -3,7 +3,7 @@ Formal baseline comparison for IARRT research paper.
 Generates results for:
 1. Base mBART (Zero-shot)
 2. mBART + Context Prompt (RAG)
-3. IARRT (LoRA + RAG)
+3. IARRT (Proposed: Post-MT Injection)
 """
 
 import argparse
@@ -23,7 +23,7 @@ from utils.evaluation import (
     idiom_accuracy
 )
 from utils.idiom_detection import detect_idioms
-from utils.routing import make_idiom_aware_translation
+from utils.routing import apply_post_injection
 
 
 def run_eval(name, hypotheses, references, spans_list, retrievals_list):
@@ -57,24 +57,14 @@ def main(eval_size: int = 20, seed: int = 42):
     # 1. Detect and Retrieve
     all_spans = []
     all_retrievals = []
-    all_contexts = []
     for de in tqdm(german_sentences, desc="Preprocessing"):
         spans = detect_idioms(de)
         retrievals = [retriever.retrieve(idiom) for idiom, _, _ in spans]
-        context = make_idiom_aware_translation(spans, retrievals)
         all_spans.append(spans)
         all_retrievals.append(retrievals)
-        all_contexts.append(context)
 
     results = []
     
-    # Debug: Print first few contexts
-    print("\nDEBUG: Preprocessing Samples:")
-    for i in range(min(3, len(german_sentences))):
-        print(f"  DE: {german_sentences[i]}")
-        print(f"  CTX: '{all_contexts[i]}'")
-        print(f"  SPANS: {all_spans[i]}")
-
     # Pipeline A: Base Zero-Shot (Force No LoRA)
     print("\nRunning Baseline 1: Zero-Shot mBART...")
     translator_base = MBartTranslator(use_lora=False)
@@ -84,15 +74,24 @@ def main(eval_size: int = 20, seed: int = 42):
 
     # Pipeline B: RAG Prompting (Base model + Context)
     print("\nRunning Baseline 2: RAG Prompting (Base + Context)...")
+    # Format context strings for prompting
+    all_contexts = []
+    for spans, retrievals in zip(all_spans, all_retrievals):
+        meanings = [r[0]["meaning"] for r in retrievals if r]
+        all_contexts.append("; ".join(meanings))
+        
     rag_hyps = translator_base.translate_batch(german_sentences, contexts=all_contexts)
     results.append(run_eval("mBART + RAG (Prompt)", rag_hyps, references, all_spans, all_retrievals))
     print(f"  Sample Hyp: {rag_hyps[0]}")
 
-    # Pipeline C: IARRT (LoRA + RAG)
-    print("\nRunning Pipeline 3: IARRT (LoRA + RAG)...")
-    translator_lora = MBartTranslator(use_lora=True)
-    iarrt_hyps = translator_lora.translate_batch(german_sentences, contexts=all_contexts)
-    results.append(run_eval("IARRT (LoRA+RAG)", iarrt_hyps, references, all_spans, all_retrievals))
+    # Pipeline C: IARRT (Proposed: Post-MT Injection)
+    print("\nRunning Pipeline 3: IARRT (Post-MT Injection)...")
+    iarrt_hyps = [
+        apply_post_injection(base, spans, ret) 
+        for base, spans, ret in zip(base_hyps, all_spans, all_retrievals)
+    ]
+    results.append(run_eval("IARRT (Ours)", iarrt_hyps, references, all_spans, all_retrievals))
+    print(f"  Sample Hyp: {iarrt_hyps[0]}")
 
     # Display Results Table
     results_df = pd.DataFrame(results)
@@ -101,6 +100,11 @@ def main(eval_size: int = 20, seed: int = 42):
     print("="*50)
     print(results_df.to_markdown(index=False))
     print("="*50)
+    
+    print("\nDEBUG: Final Translations (IARRT Ours):")
+    for i in range(len(iarrt_hyps)):
+        print(f"  REF: {references[i]}")
+        print(f"  OUR: {iarrt_hyps[i]}")
     
     OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "outputs")
     os.makedirs(OUTPUT_DIR, exist_ok=True)

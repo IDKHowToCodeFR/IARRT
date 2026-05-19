@@ -40,22 +40,28 @@ class IdiomRetriever:
 
     def retrieve(self, query: str, k: int = 3) -> List[Dict[str, float]]:
         """Return top-k idioms and cosine-like similarity scores."""
-        if query is None:
+        if not query:
             return []
-        query_text = normalize_text(query)
-        if not query_text:
-            return []
-            
-        print(f"DEBUG: Retrieving for '{query}' -> normalized: '{query_text}'")
+        
+        # BERT-friendly query format
+        query_text = f"Die Bedeutung der Phrase '{query}' ist:"
         query_embedding = self.model.encode([query_text], normalize_embeddings=True)
         query_embedding = np.asarray(query_embedding, dtype="float32")
 
         scores, indices = self.index.search(query_embedding, min(k, len(self.entries)))
         results = []
-        for score, idx in zip(scores[0], indices[0]):
-            entry = dict(self.entries[int(idx)])
-            entry["score"] = float(score)
-            results.append(entry)
+        if len(scores) > 0:
+            for score, idx in zip(scores[0], indices[0]):
+                if idx < 0 or idx >= len(self.entries): continue
+                entry = dict(self.entries[int(idx)])
+                entry["score"] = float(score)
+                results.append(entry)
+                
+        if not results:
+            print(f"DEBUG: Retrieval failed for '{query}' (Text: '{query_text}')")
+        else:
+            print(f"DEBUG: Retrieved '{results[0]['idiom']}' (Score: {results[0]['score']:.4f}) for '{query}'")
+            
         return results
 
 

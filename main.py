@@ -24,7 +24,7 @@ from models.mbart_wrapper import MBartTranslator
 from retrieval.idiom_retrieval import IdiomRetriever
 from utils.evaluation import compute_bleu, idiom_accuracy
 from utils.idiom_detection import IDIOM_DICT, detect_idioms
-from utils.routing import gate_score, make_idiom_aware_translation
+from utils.routing import gate_score, apply_post_injection
 from visualizations.plot_utils import (
     plot_bleu_comparison,
     plot_gate_histogram,
@@ -84,19 +84,20 @@ def process_sentences(
     for german in tqdm(german_sentences, desc="Detecting Idioms"):
         spans = detect_idioms(german)
         retrievals = [retriever.retrieve(idiom, k=top_k) for idiom, _, _ in spans]
-        context = make_idiom_aware_translation(spans, retrievals)
         score = gate_score(spans, retrievals)
 
         idiom_spans_list.append(spans)
         retrieval_results_list.append(retrievals)
-        contexts.append(context)
         gate_scores.append(score)
 
-    # Second pass: batch translate with context
-    final_translations = translator.translate_batch(german_sentences, contexts=contexts, batch_size=4)
-    
-    # Optional: get baseline without context for comparison
+    # Second pass: batch translate (baseline)
     baseline = translator.translate_batch(german_sentences, contexts=[""] * len(german_sentences), batch_size=4)
+    
+    # Third pass: Research Upgrade - Post-MT Injection
+    final_translations = [
+        apply_post_injection(base, spans, ret)
+        for base, spans, ret in zip(baseline, idiom_spans_list, retrieval_results_list)
+    ]
 
     return {
         "baseline": baseline,
