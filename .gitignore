@@ -1,21 +1,15 @@
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-ENV/
+*.py[cod]
+*$py.class
 
-# Models and Data
-models/
+# Essential to ignore
 outputs/
+models/
 visualizations/
-data/subset.csv
 
-# Logs
-*.log
+# Keep data structure but ignore specific large files if needed
+# data/subset.csv 
 
-# OS
+# OS junk
 .DS_Store
 Thumbs.db

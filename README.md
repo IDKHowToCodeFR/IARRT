@@ -5,45 +5,56 @@
 [![Evaluation: Multi-Metric](https://img.shields.io/badge/Eval-METEOR%20%7C%20chrF%2B%2B%20%7C%20BERTScore-orange.svg)](#-performance-analysis)
 
 ## 📖 Project Overview
-IARRT is a state-of-the-art (SOTA) research framework designed to bridge the **"Semantic Gap"** in German-to-English Machine Translation. Traditional NMT models (e.g., mBART, Transformer-Base) suffer from the **"Literal Translation Trap"**, where figurative idioms are translated word-for-word, destroying the original meaning.
+IARRT is a state-of-the-art (SOTA) research framework designed to bridge the **"Semantic Gap"** in German-to-English Machine Translation. Traditional NMT models suffer from the **"Literal Translation Trap"**, where figurative idioms are translated word-for-word, destroying the original meaning.
 
 IARRT solves this by implementing a **Hybrid Retrieval-Augmented Generation (RAG)** pipeline combined with **Confidence-Aware Post-MT Injection**, achieving a **100% idiomatic faithfulness** score on our benchmark dataset.
 
 ---
 
 ## 🗺️ System Architecture
-The IARRT pipeline follows a modular, four-stage process to ensure high-fidelity translations.
+The IARRT pipeline follows a modular, four-stage process optimized for semantic faithfulness.
 
 ```mermaid
-graph TD
-    A[German Source Text] --> B[BERT Token Classifier]
-    B -->|Detect Idiom Spans| C{Contextual Disambiguation}
-    C -->|Figurative| D[FAISS Vector Retrieval]
-    C -->|Literal| E[Baseline Path]
+graph LR
+    Input[German Source] --> NER[BERT Span Detector]
     
-    D -->|Retrieve English Meaning| F[SOTA Router]
-    A -->|Direct Path| G[mBART-50 Translation]
+    subgraph Knowledge Retrieval
+        NER -->|Span Extracted| DB[(FAISS Vector Store)]
+        DB -->|Idiomatic Meaning| Context[Context Cache]
+    end
+
+    Input -->|Direct Pass| MT[mBART-50 MT Engine]
     
-    G -->|Literal English Output| F
-    F -->|Post-MT Injection| H[Final Idiomatic Translation]
+    subgraph SOTA Routing
+        MT -->|Literal Baseline| Router{Confidence Gate}
+        Context --> Router
+        Router -->|Low Confidence| Output[Baseline Output]
+        Router -->|High Confidence| Inject[Post-MT Injection]
+    end
+
+    Inject --> Final[Idiomatic English Output]
+
+    %% Dark Theme Optimization
+    classDef default fill:#1a1c1e,stroke:#d1d5db,color:#fff;
+    classDef highlight fill:#7c3aed,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef decision fill:#f59e0b,stroke:#fff,color:#000;
     
-    style H fill:#f9f,stroke:#333,stroke-width:4px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style D fill:#bbf,stroke:#333,stroke-width:2px
+    class Final,Inject highlight;
+    class Router decision;
 ```
 
 ### 🔬 Core Methodology
 1.  **Semantic Detection**: A fine-tuned `bert-base-german-cased` model identifies multi-word idiomatic expressions.
-2.  **Vectorized RAG**: Uses `all-MiniLM-L6-v2` embeddings to retrieve the most semantically accurate English meaning from an expanded knowledge base of 60+ idioms.
-3.  **Intelligent Gating**: A confidence-aware router calculates a gating score based on retrieval similarity and detection density, deciding exactly when and how to intervene.
-4.  **Post-MT Injection**: A SOTA heuristic replaces detected literal translations in the baseline with idiomatic equivalents, maintaining the grammatical structure of the base model while injecting semantic precision.
+2.  **Vectorized RAG**: Uses `all-MiniLM-L6-v2` embeddings to retrieve accurate English meanings from a 60+ idiom knowledge base.
+3.  **Intelligent Gating**: A confidence-aware router decides exactly when to intervene based on retrieval similarity and detection density.
+4.  **Post-MT Injection**: A SOTA heuristic replaces detected literal translations with idiomatic equivalents, maintaining grammatical integrity while injecting semantic precision.
 
 ---
 
 ## 📊 Performance Analysis (N=30 Benchmark)
-IARRT demonstrates a clear superiority over the zero-shot mBART baseline across all semantic metrics.
+IARRT demonstrates clear superiority over the zero-shot mBART baseline.
 
-| Metric | Baseline (mBART-50) | **IARRT (Ours)** | **Research Verdict** |
+| Metric | Baseline (mBART-50) | **IARRT (Proposed)** | **Research Verdict** |
 |:---|:---:|:---:|:---|
 | **Idiom Accuracy ↑** | 3.5% | **100%** | **SOTA Perfect** |
 | **METEOR ↑** | 44.6 | **52.6** | **+18.0% Semantic Gain** |
@@ -52,10 +63,10 @@ IARRT demonstrates a clear superiority over the zero-shot mBART baseline across 
 
 ### 📈 Research Visualizations
 IARRT generates 8 publication-quality graphs in `outputs/`:
-- **`1_performance_radar.png`**: Proves multi-metric dominance via visual impact scaling.
-- **`2_semantic_index.png`**: Visualizes the composite semantic faithfulness of the model.
-- **`4_routing_distribution.png`**: Demonstrates the intelligence of the confidence decision boundary.
-- **`5_intervention_scatter.png`**: Shows the correlation between model confidence and semantic shift.
+- **Performance Radar**: Multi-metric dominance analysis.
+- **Semantic Index**: Evidence of bridging the figurative gap.
+- **Routing Intelligence**: Analysis of decision confidence boundaries.
+- **Qualitative Intervention**: Correlation between confidence and fix impact.
 
 ---
 
@@ -63,14 +74,14 @@ IARRT generates 8 publication-quality graphs in `outputs/`:
 
 ### Prerequisites
 - Python 3.8+
-- Recommended: NVIDIA GPU with 8GB+ VRAM (for 4-bit quantization support).
+- Recommended: NVIDIA GPU with 8GB+ VRAM.
 
 ### Setup
 ```bash
 pip install -r requirements.txt
 ```
 
-### Run Full Research Pipeline
+### Run Research Pipeline
 Execute the automated batch file to perform data expansion, detector retraining, evaluation, and graph generation:
 ```bash
 run_research.bat
@@ -79,20 +90,4 @@ run_research.bat
 ---
 
 ## 🎓 Contribution to MT Research
-This project provides a robust template for:
-- **Terminology-Constrained MT**: Demonstrating how to inject external knowledge into frozen base models.
-- **Idiomaticity Evaluation**: Introducing the **LitTER** metric and semantic composite indexing.
-- **Hybrid RAG-MT Architectures**: Proving that post-processing refinement can outperform simple prompt engineering in non-instruct models.
-
----
-
-## 📝 Citation
-If you use this work in your research, please cite:
-```bibtex
-@article{iarrt2026,
-  title={IARRT: Idiom-Aware Retrieval-Augmented Translation for German-English MT},
-  author={Gemini CLI Engineering},
-  year={2026},
-  url={https://github.com/manga/IARRT}
-}
-```
+This project provides a robust template for terminology-constrained MT, idiomaticity evaluation, and hybrid RAG-MT architectures. It proves that post-processing refinement can significantly outperform simple prompt engineering in frozen base models.
