@@ -86,13 +86,3 @@ This project provides a robust template for:
 
 ---
 
-## 📝 Citation
-If you use this work in your research, please cite:
-```bibtex
-@article{iarrt2026,
-  title={IARRT: Idiom-Aware Retrieval-Augmented Translation for German-English MT},
-  author={Gemini CLI Engineering},
-  year={2026},
-  url={https://github.com/manga/IARRT}
-}
-```
