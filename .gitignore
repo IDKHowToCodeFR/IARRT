@@ -3,3 +3,10 @@ __pycache__/
 *$py.class
 .DS_Store
 Thumbs.db
+
+# Large Model Weights (exceed 100MB GitHub limit)
+*.safetensors
+*.bin
+*.pth
+*.pt
+models/

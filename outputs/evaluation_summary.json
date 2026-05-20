@@ -1,0 +1,7 @@
+{
+  "sample_size": 4000,
+  "eval_size": 5,
+  "bleu_baseline": 39.33373669092946,
+  "bleu_idiom_aware": 27.387799646952153,
+  "idiom_accuracy": 100.0
+}
