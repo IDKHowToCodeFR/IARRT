@@ -1,15 +1,5 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Essential to ignore
-outputs/
-models/
-visualizations/
-
-# Keep data structure but ignore specific large files if needed
-# data/subset.csv 
-
-# OS junk
 .DS_Store
 Thumbs.db
